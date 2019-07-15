@@ -74,7 +74,7 @@ public class TokenCache {
    */
   public static void obtainTokensForNamenodes(Credentials credentials,
       Path[] ps, Configuration conf) throws IOException {
-    if (!UserGroupInformation.isSecurityEnabled()) {
+    if (!UserGroupInformation.isSecurityEnabled() || UserGroupInformation.isAuthenticationEnabled(UserGroupInformation.AuthenticationMethod.SDP)) {
       return;
     }
     obtainTokensForNamenodesInternal(credentials, ps, conf);

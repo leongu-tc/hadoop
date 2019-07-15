@@ -117,7 +117,10 @@ public class ServiceAuthorizationManager {
     if((clientPrincipal != null && !clientPrincipal.equals(user.getUserName())) || 
        acls.length != 2  || !acls[0].isUserAllowed(user) || acls[1].isUserAllowed(user)) {
       AUDITLOG.warn(AUTHZ_FAILED_FOR + user + " for protocol=" + protocol
-          + ", expected client Kerberos principal is " + clientPrincipal);
+          + ", expected client Kerberos principal is " + clientPrincipal + ",acl.len" + acls.length);
+      if (acls.length >= 2) {
+          AUDITLOG.warn("isUserAllowed:" + acls[0].isUserAllowed(user) + "," + acls[1].isUserAllowed(user));
+      }
       throw new AuthorizationException("User " + user + 
           " is not authorized for protocol " + protocol + 
           ", expected client Kerberos principal is " + clientPrincipal);
@@ -195,6 +198,8 @@ public class ServiceAuthorizationManager {
     // Flip to the newly parsed permissions
     protocolToAcls = newAcls;
     protocolToMachineLists = newMachineLists;
+    
+    AUDITLOG.info("refresh acl");
   }
 
   private String getHostKey(String serviceKey) {

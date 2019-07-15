@@ -111,6 +111,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeUpdateS
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.security.RMContainerTokenSecretManager;
 import org.apache.hadoop.yarn.server.utils.Lock;
+import org.apache.hadoop.yarn.util.ClientIp;
 import org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
@@ -797,6 +798,9 @@ public class CapacityScheduler extends
     }
     // Submit to the queue
     try {
+      // pass client ip to authorizer
+      ClientIp.setClientIp( applicationId.getClientIp() );
+
       queue.submitApplication(applicationId, user, queueName);
     } catch (AccessControlException ace) {
       LOG.info("Failed to submit application " + applicationId + " to queue "

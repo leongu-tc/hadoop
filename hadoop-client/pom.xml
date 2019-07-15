@@ -18,12 +18,12 @@
   <parent>
     <groupId>org.apache.hadoop</groupId>
     <artifactId>hadoop-project-dist</artifactId>
-    <version>2.7.2</version>
+    <version>2.7.2-SDP</version>
     <relativePath>../hadoop-project-dist</relativePath>
   </parent>
   <groupId>org.apache.hadoop</groupId>
   <artifactId>hadoop-client</artifactId>
-  <version>2.7.2</version>
+  <version>2.7.2-SDP</version>
   <packaging>jar</packaging>
 
   <description>Apache Hadoop Client</description>
@@ -34,6 +34,11 @@
  </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>com.cgws.sdp.auth</groupId>
+      <artifactId>sdp-auth-common</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>

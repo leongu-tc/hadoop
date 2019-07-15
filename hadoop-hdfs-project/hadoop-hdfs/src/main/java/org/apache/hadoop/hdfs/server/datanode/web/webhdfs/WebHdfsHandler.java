@@ -261,7 +261,7 @@ public class WebHdfsHandler extends SimpleChannelInboundHandler<HttpRequest> {
   }
 
   private void injectToken() throws IOException {
-    if (UserGroupInformation.isSecurityEnabled()) {
+    if (UserGroupInformation.isSecurityEnabled() && !UserGroupInformation.isAuthenticationEnabled(UserGroupInformation.AuthenticationMethod.SDP)) {
       Token<DelegationTokenIdentifier> token = params.delegationToken();
       token.setKind(HDFS_DELEGATION_KIND);
       ugi.addToken(token);

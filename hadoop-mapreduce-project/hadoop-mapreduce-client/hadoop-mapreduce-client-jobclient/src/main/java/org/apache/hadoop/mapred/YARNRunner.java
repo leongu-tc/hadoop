@@ -183,7 +183,7 @@ public class YARNRunner implements ClientProtocol {
   void addHistoryToken(Credentials ts) throws IOException, InterruptedException {
     /* check if we have a hsproxy, if not, no need */
     MRClientProtocol hsProxy = clientCache.getInitializedHSProxy();
-    if (UserGroupInformation.isSecurityEnabled() && (hsProxy != null)) {
+    if (UserGroupInformation.isSecurityEnabled() && !UserGroupInformation.isAuthenticationEnabled(UserGroupInformation.AuthenticationMethod.SDP) && (hsProxy != null)) {
       /*
        * note that get delegation token was called. Again this is hack for oozie
        * to make sure we add history server delegation tokens to the credentials

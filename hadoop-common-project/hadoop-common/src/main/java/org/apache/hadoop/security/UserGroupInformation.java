@@ -129,7 +129,96 @@ public class UserGroupInformation {
       }
     }
   }
-  
+
+
+  @InterfaceAudience.Private
+  public static class ConfLoginModule implements LoginModule {
+    private Subject subject;
+
+    @Override
+    public boolean abort() throws LoginException {
+      return true;
+    }
+
+    private <T extends Principal> T getCanonicalUser(Class<T> cls) {
+      for(T user: subject.getPrincipals(cls)) {
+        return user;
+      }
+      return null;
+    }
+
+    @Override
+    public boolean commit() throws LoginException {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("hadoop login commit");
+      }
+      // if we already have a user, we are done.
+      if (!subject.getPrincipals(User.class).isEmpty()) {
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("using existing subject:"+subject.getPrincipals());
+        }
+        return true;
+      }
+      Principal user = null;
+      // if we are using sdp, try it out
+      if (isAuthenticationMethodEnabled(AuthenticationMethod.SDP)) {
+        String userName = conf.get("hadoop_security_authentication_sdp_username");
+        if(userName == null){
+          userName = conf.get("hadoop.security.authentication.sdp.username");
+        }
+        if( userName != null ){
+          user = new User(userName);
+        }
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("using sdp user:"+user);
+        }
+      }
+      // if we found the user, add our principal
+      if (user != null) {
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Using user: \"" + user + "\" with name " + user.getName());
+        }
+
+        User userEntry = null;
+        try {
+          userEntry = new User(user.getName());
+        } catch (Exception e) {
+          throw (LoginException)(new LoginException(e.toString()).initCause(e));
+        }
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("User entry: \"" + userEntry.toString() + "\"" );
+        }
+
+        subject.getPrincipals().add(userEntry);
+        return true;
+      }
+      LOG.error("Can't find user in " + subject);
+      throw new LoginException("Can't find user name for sdp authentication");
+    }
+
+    @Override
+    public void initialize(Subject subject, CallbackHandler callbackHandler,
+                           Map<String, ?> sharedState, Map<String, ?> options) {
+      this.subject = subject;
+    }
+
+    @Override
+    public boolean login() throws LoginException {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("hadoop login");
+      }
+      return true;
+    }
+
+    @Override
+    public boolean logout() throws LoginException {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("hadoop logout");
+      }
+      return true;
+    }
+  }
+
   /**
    * A login module that looks at the Kerberos, Unix, or Windows principal and
    * adds the corresponding UserName.
@@ -261,6 +350,11 @@ public class UserGroupInformation {
         }
       }
     }
+  }
+
+
+  public static boolean isAuthenticationEnabled(AuthenticationMethod authMethod){
+    return authenticationMethod == authMethod;
   }
 
   /**
@@ -460,6 +554,7 @@ public class UserGroupInformation {
       "hadoop-user-kerberos";
     private static final String KEYTAB_KERBEROS_CONFIG_NAME = 
       "hadoop-keytab-kerberos";
+    private static final String SDP_CONFIG_NAME = "sdp";
 
     private static final Map<String, String> BASIC_JAAS_OPTIONS =
       new HashMap<String,String>();
@@ -478,6 +573,12 @@ public class UserGroupInformation {
       new AppConfigurationEntry(HadoopLoginModule.class.getName(),
                                 LoginModuleControlFlag.REQUIRED,
                                 BASIC_JAAS_OPTIONS);
+
+    private static final AppConfigurationEntry SDP_LOGIN =
+            new AppConfigurationEntry(ConfLoginModule.class.getName(),
+                    LoginModuleControlFlag.REQUIRED,
+                    BASIC_JAAS_OPTIONS);
+
     private static final Map<String,String> USER_KERBEROS_OPTIONS = 
       new HashMap<String,String>();
     static {
@@ -523,6 +624,9 @@ public class UserGroupInformation {
     
     private static final AppConfigurationEntry[] SIMPLE_CONF = 
       new AppConfigurationEntry[]{OS_SPECIFIC_LOGIN, HADOOP_LOGIN};
+
+    private static final AppConfigurationEntry[] SDP_CONF =
+            new AppConfigurationEntry[]{SDP_LOGIN};
     
     private static final AppConfigurationEntry[] USER_KERBEROS_CONF =
       new AppConfigurationEntry[]{OS_SPECIFIC_LOGIN, USER_KERBEROS_LOGIN,
@@ -535,6 +639,8 @@ public class UserGroupInformation {
     public AppConfigurationEntry[] getAppConfigurationEntry(String appName) {
       if (SIMPLE_CONFIG_NAME.equals(appName)) {
         return SIMPLE_CONF;
+      }else if( SDP_CONFIG_NAME.equals(appName) ){
+        return SDP_CONF;
       } else if (USER_KERBEROS_CONFIG_NAME.equals(appName)) {
         return USER_KERBEROS_CONF;
       } else if (KEYTAB_KERBEROS_CONFIG_NAME.equals(appName)) {
@@ -1220,6 +1326,7 @@ public class UserGroupInformation {
     // subtype is needed to differentiate, ex. if digest is token or ldap
     SIMPLE(AuthMethod.SIMPLE,
         HadoopConfiguration.SIMPLE_CONFIG_NAME),
+    SDP(AuthMethod.SDP_PLAIN,HadoopConfiguration.SDP_CONFIG_NAME),
     KERBEROS(AuthMethod.KERBEROS,
         HadoopConfiguration.USER_KERBEROS_CONFIG_NAME),
     TOKEN(AuthMethod.TOKEN),

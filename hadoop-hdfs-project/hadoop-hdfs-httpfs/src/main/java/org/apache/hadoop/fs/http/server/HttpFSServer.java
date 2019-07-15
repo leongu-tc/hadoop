@@ -522,6 +522,26 @@ public class HttpFSServer {
         }
         break;
       }
+      case COPY:{
+    	  Short permission = params.get(PermissionParam.NAME,
+                  PermissionParam.class);
+		  Boolean override = params.get(OverwriteParam.NAME,
+			                 OverwriteParam.class);
+		  Short replication = params.get(ReplicationParam.NAME,
+			                  ReplicationParam.class);
+		  Long blockSize = params.get(BlockSizeParam.NAME,
+			               BlockSizeParam.class);
+		  String sources = params.get(SourcesParam.NAME, SourcesParam.class);
+		  FSOperations.FSCopy command =
+			new FSOperations.FSCopy(sources, path, permission, override,
+			               replication, blockSize);
+		  fsExecute(user, command);
+		  AUDIT_LOG.info(
+			"[{}] permission [{}] override [{}] replication [{}] blockSize [{}]",
+			new Object[]{path, permission, override, replication, blockSize});
+		  response = Response.status(Response.Status.CREATED).build();
+		  break;
+      }
       case SETXATTR: {
         String xattrName = params.get(XAttrNameParam.NAME, 
             XAttrNameParam.class);

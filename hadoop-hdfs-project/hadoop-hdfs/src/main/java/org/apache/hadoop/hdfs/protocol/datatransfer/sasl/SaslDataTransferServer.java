@@ -108,7 +108,7 @@ public class SaslDataTransferServer {
         "SASL server doing encrypted handshake for peer = {}, datanodeId = {}",
         peer, datanodeId);
       return getEncryptedStreams(peer, underlyingOut, underlyingIn);
-    } else if (!UserGroupInformation.isSecurityEnabled()) {
+    } else if (!UserGroupInformation.isSecurityEnabled() || UserGroupInformation.isAuthenticationEnabled( UserGroupInformation.AuthenticationMethod.SDP)) {
       LOG.debug(
         "SASL server skipping handshake in unsecured configuration for "
         + "peer = {}, datanodeId = {}", peer, datanodeId);

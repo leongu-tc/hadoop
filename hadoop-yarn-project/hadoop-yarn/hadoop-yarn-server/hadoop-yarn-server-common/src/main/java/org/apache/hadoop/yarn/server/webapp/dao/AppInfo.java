@@ -57,6 +57,10 @@ public class AppInfo {
   protected long finishedTime;
   protected long elapsedTime;
   protected String applicationTags;
+  
+  protected int runningContainers;
+  private long allocatedCpuVcores;
+  private long allocatedMemoryMB;
 
   public AppInfo() {
     // JAXB needs this
@@ -85,6 +89,20 @@ public class AppInfo {
     progress = app.getProgress() * 100; // in percent
     if (app.getApplicationTags() != null && !app.getApplicationTags().isEmpty()) {
       this.applicationTags = CSV_JOINER.join(app.getApplicationTags());
+    }
+    
+    if (app.getApplicationResourceUsageReport() != null) {
+      runningContainers = app.getApplicationResourceUsageReport()
+              .getNumUsedContainers();
+      runningContainers = runningContainers < 0 ? 0 : runningContainers;
+      if (app.getApplicationResourceUsageReport().getUsedResources() != null) {
+        allocatedCpuVcores = app.getApplicationResourceUsageReport()
+                .getUsedResources().getVirtualCores();
+        allocatedCpuVcores = allocatedCpuVcores < 0 ? 0 : allocatedCpuVcores;
+        allocatedMemoryMB = app.getApplicationResourceUsageReport()
+                .getUsedResources().getMemory();
+        allocatedMemoryMB = allocatedMemoryMB < 0 ? 0 : allocatedMemoryMB;
+      }
     }
   }
 
@@ -162,5 +180,18 @@ public class AppInfo {
 
   public String getApplicationTags() {
     return applicationTags;
+  }
+
+
+  public long getAllocatedCpuVcores() {
+    return allocatedCpuVcores;
+  }
+
+  public long getAllocatedMemoryMB() {
+    return allocatedMemoryMB;
+  }
+
+  public int getRunningContainers() {
+    return runningContainers;
   }
 }

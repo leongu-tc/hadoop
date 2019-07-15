@@ -50,6 +50,7 @@ public class QueuePlacementPolicy {
         QueuePlacementRule.NestedUserQueue.class);
     map.put("default", QueuePlacementRule.Default.class);
     map.put("reject", QueuePlacementRule.Reject.class);
+    map.put("sdp",QueuePlacementRule.SdpProject.class);
     ruleClasses = Collections.unmodifiableMap(map);
   }
   

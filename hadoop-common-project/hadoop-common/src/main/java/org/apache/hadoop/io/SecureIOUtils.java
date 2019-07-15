@@ -18,7 +18,6 @@
 package org.apache.hadoop.io;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,9 +29,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.io.nativeio.Errno;
 import org.apache.hadoop.io.nativeio.NativeIO;
-import org.apache.hadoop.io.nativeio.NativeIOException;
 import org.apache.hadoop.io.nativeio.NativeIO.POSIX.Stat;
 import org.apache.hadoop.security.UserGroupInformation;
 
@@ -68,7 +65,7 @@ public class SecureIOUtils {
    * RuntimeException since we don't want to run insecurely.
    */
   static {
-    boolean shouldBeSecure = UserGroupInformation.isSecurityEnabled();
+    boolean shouldBeSecure = UserGroupInformation.isSecurityEnabled() && !UserGroupInformation.isAuthenticationEnabled(UserGroupInformation.AuthenticationMethod.SDP);
     boolean canBeSecure = NativeIO.isAvailable();
 
     if (!canBeSecure && shouldBeSecure) {
@@ -111,7 +108,7 @@ public class SecureIOUtils {
   public static RandomAccessFile openForRandomRead(File f,
       String mode, String expectedOwner, String expectedGroup)
       throws IOException {
-    if (!UserGroupInformation.isSecurityEnabled()) {
+    if (!UserGroupInformation.isSecurityEnabled() || UserGroupInformation.isAuthenticationEnabled(UserGroupInformation.AuthenticationMethod.SDP)) {
       return new RandomAccessFile(f, mode);
     }
     return forceSecureOpenForRandomRead(f, mode, expectedOwner, expectedGroup);
@@ -152,7 +149,7 @@ public class SecureIOUtils {
    */
   public static FSDataInputStream openFSDataInputStream(File file,
       String expectedOwner, String expectedGroup) throws IOException {
-    if (!UserGroupInformation.isSecurityEnabled()) {
+    if (!UserGroupInformation.isSecurityEnabled() || UserGroupInformation.isAuthenticationEnabled(UserGroupInformation.AuthenticationMethod.SDP)) {
       return rawFilesystem.open(new Path(file.getAbsolutePath()));
     }
     return forceSecureOpenFSDataInputStream(file, expectedOwner, expectedGroup);
@@ -198,7 +195,7 @@ public class SecureIOUtils {
    */
   public static FileInputStream openForRead(File f, String expectedOwner, 
       String expectedGroup) throws IOException {
-    if (!UserGroupInformation.isSecurityEnabled()) {
+    if (!UserGroupInformation.isSecurityEnabled() || UserGroupInformation.isAuthenticationEnabled( UserGroupInformation.AuthenticationMethod.SDP)) {
       return new FileInputStream(f);
     }
     return forceSecureOpenForRead(f, expectedOwner, expectedGroup);

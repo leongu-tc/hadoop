@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,7 +45,7 @@ public class RMAppsBlock extends AppsBlock {
 
   @Inject
   RMAppsBlock(ResourceManager rm, ApplicationBaseProtocol appBaseProt,
-      View.ViewContext ctx) {
+              View.ViewContext ctx) {
     super(appBaseProt, ctx);
     this.rm = rm;
   }
@@ -53,13 +53,14 @@ public class RMAppsBlock extends AppsBlock {
   @Override
   protected void renderData(Block html) {
     TBODY<TABLE<Hamlet>> tbody =
-        html.table("#apps").thead().tr().th(".id", "ID").th(".user", "User")
-          .th(".name", "Name").th(".type", "Application Type")
-          .th(".queue", "Queue").th(".starttime", "StartTime")
-          .th(".finishtime", "FinishTime").th(".state", "State")
-          .th(".finalstatus", "FinalStatus").th(".progress", "Progress")
-          .th(".ui", "Tracking UI").th(".blacklisted", "Blacklisted Nodes")._()
-          ._().tbody();
+            html.table("#apps").thead().tr().th(".id", "ID").th(".user", "User")
+                    .th(".name", "Name").th(".type", "Application Type")
+                    .th(".queue", "Queue").th(".starttime", "StartTime")
+                    .th(".finishtime", "FinishTime").th(".state", "State")
+                    .th(".finalstatus", "FinalStatus").th(".runningcontainer", "Running Containers")
+                    .th(".allocatedCpu", "Allocated CPU VCores").th(".allocatedMemory", "Allocated Memory MB")
+                    .th(".progress", "Progress").th(".ui", "Tracking UI")
+                    .th(".blacklisted", "Blacklisted Nodes")._()._().tbody();
 
     StringBuilder appsTableData = new StringBuilder("[\n");
     for (ApplicationReport appReport : appReports) {
@@ -67,79 +68,85 @@ public class RMAppsBlock extends AppsBlock {
       // the history side implementation of ApplicationBaseProtocol
       // hasn't filtering capability (YARN-1819).
       if (!reqAppStates.isEmpty()
-          && !reqAppStates.contains(appReport.getYarnApplicationState())) {
+              && !reqAppStates.contains(appReport.getYarnApplicationState())) {
         continue;
       }
 
       AppInfo app = new AppInfo(appReport);
       String blacklistedNodesCount = "N/A";
       Set<String> nodes =
-          RMAppAttemptBlock
-            .getBlacklistedNodes(rm, ConverterUtils.toApplicationAttemptId(app
-              .getCurrentAppAttemptId()));
+              RMAppAttemptBlock
+                      .getBlacklistedNodes(rm, ConverterUtils.toApplicationAttemptId(app
+                              .getCurrentAppAttemptId()));
       if (nodes != null) {
         blacklistedNodesCount = String.valueOf(nodes.size());
       }
       String percent = String.format("%.1f", app.getProgress());
       // AppID numerical value parsed by parseHadoopID in yarn.dt.plugins.js
       appsTableData
-        .append("[\"<a href='")
-        .append(url("app", app.getAppId()))
-        .append("'>")
-        .append(app.getAppId())
-        .append("</a>\",\"")
-        .append(
-          StringEscapeUtils.escapeJavaScript(StringEscapeUtils.escapeHtml(app
-            .getUser())))
-        .append("\",\"")
-        .append(
-          StringEscapeUtils.escapeJavaScript(StringEscapeUtils.escapeHtml(app
-            .getName())))
-        .append("\",\"")
-        .append(
-          StringEscapeUtils.escapeJavaScript(StringEscapeUtils.escapeHtml(app
-            .getType())))
-        .append("\",\"")
-        .append(
-          StringEscapeUtils.escapeJavaScript(StringEscapeUtils.escapeHtml(app
-            .getQueue()))).append("\",\"").append(app.getStartedTime())
-        .append("\",\"").append(app.getFinishedTime())
-        .append("\",\"")
-        .append(app.getAppState() == null ? UNAVAILABLE : app.getAppState())
-        .append("\",\"")
-        .append(app.getFinalAppStatus())
-        .append("\",\"")
-        // Progress bar
-        .append("<br title='").append(percent).append("'> <div class='")
-        .append(C_PROGRESSBAR).append("' title='").append(join(percent, '%'))
-        .append("'> ").append("<div class='").append(C_PROGRESSBAR_VALUE)
-        .append("' style='").append(join("width:", percent, '%'))
-        .append("'> </div> </div>").append("\",\"<a ");
+              .append("[\"<a href='")
+              .append(url("app", app.getAppId()))
+              .append("'>")
+              .append(app.getAppId())
+              .append("</a>\",\"")
+              .append(
+                      StringEscapeUtils.escapeJavaScript(StringEscapeUtils.escapeHtml(app
+                              .getUser())))
+              .append("\",\"")
+              .append(
+                      StringEscapeUtils.escapeJavaScript(StringEscapeUtils.escapeHtml(app
+                              .getName())))
+              .append("\",\"")
+              .append(
+                      StringEscapeUtils.escapeJavaScript(StringEscapeUtils.escapeHtml(app
+                              .getType())))
+              .append("\",\"")
+              .append(
+                      StringEscapeUtils.escapeJavaScript(StringEscapeUtils.escapeHtml(app
+                              .getQueue()))).append("\",\"").append(app.getStartedTime())
+              .append("\",\"").append(app.getFinishedTime())
+              .append("\",\"")
+              .append(app.getAppState() == null ? UNAVAILABLE : app.getAppState())
+              .append("\",\"")
+              .append(app.getFinalAppStatus())
+              .append("\",\"")
+              .append(app.getRunningContainers())
+              .append("\",\"")
+              .append(app.getAllocatedCpuVcores())
+              .append("\",\"")
+              .append(app.getAllocatedMemoryMB())
+              .append("\",\"")
+              // Progress bar
+              .append("<br title='").append(percent).append("'> <div class='")
+              .append(C_PROGRESSBAR).append("' title='").append(join(percent, '%'))
+              .append("'> ").append("<div class='").append(C_PROGRESSBAR_VALUE)
+              .append("' style='").append(join("width:", percent, '%'))
+              .append("'> </div> </div>").append("\",\"<a ");
 
       String trackingURL =
-          app.getTrackingUrl() == null
-              || app.getTrackingUrl().equals(UNAVAILABLE) ? null : app
-            .getTrackingUrl();
+              app.getTrackingUrl() == null
+                      || app.getTrackingUrl().equals(UNAVAILABLE) ? null : app
+                      .getTrackingUrl();
 
       String trackingUI =
-          app.getTrackingUrl() == null
-              || app.getTrackingUrl().equals(UNAVAILABLE) ? "Unassigned" : app
-            .getAppState() == YarnApplicationState.FINISHED
-              || app.getAppState() == YarnApplicationState.FAILED
-              || app.getAppState() == YarnApplicationState.KILLED ? "History"
-              : "ApplicationMaster";
+              app.getTrackingUrl() == null
+                      || app.getTrackingUrl().equals(UNAVAILABLE) ? "Unassigned" : app
+                      .getAppState() == YarnApplicationState.FINISHED
+                      || app.getAppState() == YarnApplicationState.FAILED
+                      || app.getAppState() == YarnApplicationState.KILLED ? "History"
+                      : "ApplicationMaster";
       appsTableData.append(trackingURL == null ? "#" : "href='" + trackingURL)
-        .append("'>").append(trackingUI).append("</a>\",").append("\"")
-        .append(blacklistedNodesCount).append("\"],\n");
+              .append("'>").append(trackingUI).append("</a>\",").append("\"")
+              .append(blacklistedNodesCount).append("\"],\n");
 
     }
     if (appsTableData.charAt(appsTableData.length() - 2) == ',') {
       appsTableData.delete(appsTableData.length() - 2,
-        appsTableData.length() - 1);
+              appsTableData.length() - 1);
     }
     appsTableData.append("]");
     html.script().$type("text/javascript")
-      ._("var appsTableData=" + appsTableData)._();
+            ._("var appsTableData=" + appsTableData)._();
 
     tbody._()._();
   }

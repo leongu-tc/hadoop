@@ -23,12 +23,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.cgws.sdp.discovery.client.ServiceClient;
+import com.cgws.sdp.discovery.client.beans.ServiceInfo;
+import com.cgws.sdp.discovery.common.ServiceRole;
+import com.cgws.sdp.discovery.utiles.Config;
+import com.cgws.sdp.rpc.portal.PortalService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.Groups;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.thrift.TException;
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.transport.TTransportException;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -341,6 +352,75 @@ public abstract class QueuePlacementRule {
     @Override
     public boolean isTerminal() {
       return true;
+    }
+  }
+
+  public static class SdpProject extends QueuePlacementRule {
+    @Override
+    protected String getQueueForApp(String requestedQueue, String user,
+                                    Groups groups, Map<FSQueueType, Set<String>> configuredQueues) {
+      Configuration conf = new Configuration();
+      String portalIp = conf.get("sdp.portal.rpc.ip");
+      String port = conf.get("sdp.portal.rpc.port");
+
+      PortalService.Client client = null;
+      TSocket transport = null;
+      if (portalIp != null && port != null) {
+        try {
+          transport = new TSocket(portalIp, Integer.parseInt(port));
+          transport.open();
+
+          TProtocol protocol = new TBinaryProtocol(transport);
+           client = new PortalService.Client(protocol);
+          return client.getDefaultProjectByUserName(user);
+        } catch (Exception e) {
+          LOG.warn("failed to get user default project[conf method] ,will try service disovery.", e);
+        }finally {
+          if( transport != null ){
+            try {
+              transport.close();
+            } catch (Exception e1){
+              LOG.warn("failed to close rpc.", e1);
+            }
+          }
+        }
+      }
+      //as failed from config ,try to get portal info from service discovery
+      Config.setProperty("discovery.service.zk.conn.str", conf.get("hadoop.registry.zk.quorum"));
+      Config.setProperty("discovery.cluster.name", "sdp");
+      try {
+          ServiceInfo portalInfo = ServiceClient.getInstance().getServiceInfo("sdp", "portal", "portal", "rpc", ServiceRole.MASTER);
+          if( portalInfo != null ) {
+
+            transport = new TSocket(portalInfo.getIp(), portalInfo.getPort());
+            transport.open();
+
+            TProtocol protocol = new TBinaryProtocol(transport);
+            client = new PortalService.Client(protocol);
+            String queue = client.getDefaultProjectByUserName(user);
+            if( queue !=null ){
+              return queue;
+            }else{
+              LOG.warn("null default queue got from portal rpc.");
+            }
+          }
+        } catch (Exception e) {
+          LOG.error("failed to get user default project[service discovery method],fail it!",e);
+        } finally {
+          if( transport != null ){
+            try {
+              transport.close();
+            } catch (Exception e1){
+              LOG.warn("failed to close rpc.", e1);
+            }
+          }
+        }
+      return "";
+    }
+
+    @Override
+    public boolean isTerminal() {
+      return false;
     }
   }
 

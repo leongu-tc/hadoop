@@ -172,6 +172,16 @@ public class FileSystemAccessService extends BaseService implements FileSystemAc
       conf.set("hadoop.security.authentication", "simple");
       UserGroupInformation.setConfiguration(conf);
       LOG.info("Using FileSystemAccess simple/pseudo authentication, principal [{}]", System.getProperty("user.name"));
+    }else if(security.equalsIgnoreCase("sdp")){
+      Configuration conf = new Configuration();
+      conf.set("hadoop.security.authentication", "sdp");
+      UserGroupInformation.setConfiguration(conf);
+      try {
+        UserGroupInformation.loginUserFromSubject(null);
+      } catch (IOException ex) {
+        throw new ServiceException(FileSystemAccessException.ERROR.H12, ex.getMessage(), ex);
+      }
+      LOG.info("Using FileSystemAccess sdp authentication.");
     } else {
       throw new ServiceException(FileSystemAccessException.ERROR.H09, security);
     }

@@ -18,9 +18,11 @@
 
 package org.apache.hadoop.fs.http.server;
 
+import com.cgws.sdp.auth.plugin.SdpAuthenticator;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.lib.server.ServerException;
 import org.apache.hadoop.lib.service.FileSystemAccess;
 import org.apache.hadoop.lib.servlet.ServerWebApp;
@@ -98,6 +100,9 @@ public class HttpFSServerWebApp extends ServerWebApp {
     }
     SERVER = this;
     super.init();
+    Configuration conf = new Configuration();
+    conf.addResource( new Path(getConfig().get("httpfs.hadoop.config.dir",getConfigDir())+"/core-site.xml"));
+    SdpAuthenticator.init(conf.get("sdp.portal.rpc.ip","127.0.0.1"),conf.getInt("sdp.portal.rpc.port",12345),"hadoop");
     adminGroup = getConfig().get(getPrefixedName(CONF_ADMIN_GROUP), "admin");
     LOG.info("Connects to Namenode [{}]",
              get().get(FileSystemAccess.class).getFileSystemConfiguration().

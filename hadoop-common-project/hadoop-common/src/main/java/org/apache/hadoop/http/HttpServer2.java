@@ -55,10 +55,7 @@ import org.apache.hadoop.conf.ConfServlet;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.security.AuthenticationFilterInitializer;
-import org.apache.hadoop.security.authentication.util.FileSignerSecretProvider;
-import org.apache.hadoop.security.authentication.util.RandomSignerSecretProvider;
 import org.apache.hadoop.security.authentication.util.SignerSecretProvider;
-import org.apache.hadoop.security.authentication.util.ZKSignerSecretProvider;
 import org.apache.hadoop.security.ssl.SslSocketConnectorSecure;
 import org.apache.hadoop.jmx.JMXJsonServlet;
 import org.apache.hadoop.log.LogLevel;
@@ -97,8 +94,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
 
-import static org.apache.hadoop.security.authentication.server
-    .AuthenticationFilter.*;
 /**
  * Create a Jetty embedded server to answer http requests. The primary goal is
  * to serve up status information for the server. There are three contexts:
@@ -663,7 +658,7 @@ public final class HttpServer2 implements FilterContainer {
     }
     webAppContext.addServlet(holder, pathSpec);
 
-    if(requireAuth && UserGroupInformation.isSecurityEnabled()) {
+    if(requireAuth && UserGroupInformation.isSecurityEnabled() && !UserGroupInformation.isAuthenticationEnabled( UserGroupInformation.AuthenticationMethod.SDP) ) {
        LOG.info("Adding Kerberos (SPNEGO) filter to " + name);
        ServletHandler handler = webAppContext.getServletHandler();
        FilterMapping fmap = new FilterMapping();

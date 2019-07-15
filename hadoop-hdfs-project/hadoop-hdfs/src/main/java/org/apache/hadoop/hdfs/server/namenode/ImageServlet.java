@@ -173,7 +173,7 @@ public class ImageServlet extends HttpServlet {
       HttpServletRequest request, HttpServletResponse response,
       FSImage nnImage, String theirStorageInfoString) throws IOException {
 
-    if (UserGroupInformation.isSecurityEnabled()
+    if (UserGroupInformation.isSecurityEnabled() && !UserGroupInformation.isAuthenticationEnabled(UserGroupInformation.AuthenticationMethod.SDP)
         && !isValidRequestor(context, request.getUserPrincipal().getName(),
             conf)) {
       String errorMsg = "Only Namenode, Secondary Namenode, and administrators may access "

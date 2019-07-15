@@ -38,6 +38,8 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HAUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.server.namenode.NamenodeFsck;
+import org.apache.hadoop.hdfs.util.AuthenticateUtil;
+import org.apache.hadoop.hdfs.util.AuthenticateUtil.AuthenticateEntity;
 import org.apache.hadoop.hdfs.web.URLConnectionFactory;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -54,11 +56,11 @@ import org.apache.hadoop.util.ToolRunner;
  * <li>files with blocks that are completely missing from all datanodes.<br/>
  * In this case the tool can perform one of the following actions:
  *  <ul>
- *      <li>none ({@link org.apache.hadoop.hdfs.server.namenode.NamenodeFsck#FIXING_NONE})</li>
+ *      <li>none ({@link NamenodeFsck#FIXING_NONE})</li>
  *      <li>move corrupted files to /lost+found directory on DFS
- *      ({@link org.apache.hadoop.hdfs.server.namenode.NamenodeFsck#FIXING_MOVE}). Remaining data blocks are saved as a
+ *      ({@link NamenodeFsck#FIXING_MOVE}). Remaining data blocks are saved as a
  *      block chains, representing longest consecutive series of valid blocks.</li>
- *      <li>delete corrupted files ({@link org.apache.hadoop.hdfs.server.namenode.NamenodeFsck#FIXING_DELETE})</li>
+ *      <li>delete corrupted files ({@link NamenodeFsck#FIXING_DELETE})</li>
  *  </ul>
  *  </li>
  *  <li>detect files with under-replicated or over-replicated blocks</li>
@@ -127,7 +129,8 @@ public class DFSck extends Configured implements Tool {
     this.out = out;
     this.connectionFactory = URLConnectionFactory
         .newDefaultURLConnectionFactory(conf);
-    this.isSpnegoEnabled = UserGroupInformation.isSecurityEnabled();
+    this.isSpnegoEnabled = UserGroupInformation.isSecurityEnabled()&&
+            !UserGroupInformation.isAuthenticationEnabled(UserGroupInformation.AuthenticationMethod.SDP);
   }
 
   /**
@@ -334,6 +337,11 @@ public class DFSck extends Configured implements Tool {
     } catch (AuthenticationException e) {
       throw new IOException(e);
     }
+    
+    //add SDP Authenticate Params
+    AuthenticateEntity authenticateEntity = AuthenticateUtil.getAuthenticateEntity(getConf());
+    connection.addRequestProperty(authenticateEntity.getHttpHeaderKey(), authenticateEntity.getHttpHeaderAuthValue());
+    
     InputStream stream = connection.getInputStream();
     BufferedReader input = new BufferedReader(new InputStreamReader(
                                               stream, "UTF-8"));

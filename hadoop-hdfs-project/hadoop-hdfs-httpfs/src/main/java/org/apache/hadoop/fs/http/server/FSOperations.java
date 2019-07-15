@@ -537,6 +537,66 @@ public class FSOperations {
     }
 
   }
+  
+  /**
+   * Executor that performs a copy FileSystemAccess files system operation.
+   */
+  @InterfaceAudience.Private
+  public static class FSCopy implements FileSystemAccess.FileSystemExecutor<Void> {
+	  private Path source;
+	  private Path dest;
+	  private short permission;
+	  private boolean override;
+	  private short replication;
+	  private long blockSize;
+	  
+	  /**
+	   * Creates a Copy executor.
+	   *
+	   * @param source path
+	   * @param dest path
+	   * @param perm permission for the file.
+	   * @param override if the file should be overriden if it already exist.
+	   * @param repl the replication factor for the file.
+	   * @param blockSize the block size for the file.
+	   */
+	  public FSCopy(String source, String dest, short perm, boolean override,
+			  short repl, long blockSize) {
+		  this.source = new Path(source);
+		  this.dest = new Path(dest);
+		  this.permission = perm;
+		  this.override = override;
+		  this.replication = repl;
+		  this.blockSize = blockSize;
+	  }
+	  
+	  /**
+	   * Executes the filesystem operation.
+	   *
+	   * @param fs filesystem instance to use.
+	   *
+	   * @return The URI of the created file.
+	   *
+	   * @throws IOException thrown if an IO error occured.
+	   */
+	  @Override
+	  public Void execute(FileSystem fs) throws IOException {
+		  if (replication == -1) {
+			  replication = fs.getDefaultReplication(dest);
+		  }
+		  if (blockSize == -1) {
+			  blockSize = fs.getDefaultBlockSize(dest);
+		  }
+		  FsPermission fsPermission = new FsPermission(permission);
+		  int bufferSize = fs.getConf().getInt("httpfs.buffer.size", 4096);
+		  InputStream is = fs.open(source);
+		  OutputStream os = fs.create(dest, fsPermission, override, bufferSize, replication, blockSize, null);
+		  IOUtils.copyBytes(is, os, bufferSize, true);
+		  os.close();
+		  return null;
+	  }
+	  
+  }
 
   /**
    * Executor that performs a delete FileSystemAccess files system operation.

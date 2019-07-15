@@ -35,7 +35,7 @@ class DataNodeUGIProvider {
   }
 
   UserGroupInformation ugi() throws IOException {
-    if (UserGroupInformation.isSecurityEnabled()) {
+    if (UserGroupInformation.isSecurityEnabled() && !UserGroupInformation.isAuthenticationEnabled(UserGroupInformation.AuthenticationMethod.SDP)) {
       return tokenUGI();
     }
 

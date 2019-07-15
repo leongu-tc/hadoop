@@ -34,8 +34,12 @@ import org.apache.hadoop.yarn.api.records.QueueState;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
+import org.apache.hadoop.yarn.security.ConfiguredYarnAuthorizer;
+import org.apache.hadoop.yarn.security.PrivilegedEntity;
+import org.apache.hadoop.yarn.security.YarnAuthorizationProvider;
 import org.apache.hadoop.yarn.server.resourcemanager.resource.ResourceWeights;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerUtils;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
 @Private
@@ -57,6 +61,10 @@ public abstract class FSQueue implements Queue, Schedulable {
   private long minSharePreemptionTimeout = Long.MAX_VALUE;
   private float fairSharePreemptionThreshold = 0.5f;
 
+  // support YarnAuthorizationProvider in FairScheduler
+  protected YarnAuthorizationProvider authorizer = null;
+  protected final PrivilegedEntity queueEntity;
+
   public FSQueue(String name, FairScheduler scheduler, FSParentQueue parent) {
     this.name = name;
     this.scheduler = scheduler;
@@ -64,6 +72,9 @@ public abstract class FSQueue implements Queue, Schedulable {
     metrics.setMinShare(getMinShare());
     metrics.setMaxShare(getMaxShare());
     this.parent = parent;
+    // support YarnAuthorizationProvider in FairScheduler
+    queueEntity = new PrivilegedEntity(PrivilegedEntity.EntityType.QUEUE, name);
+    authorizer = YarnAuthorizationProvider.getInstance(scheduler.getConf());
   }
   
   public String getName() {
@@ -177,7 +188,12 @@ public abstract class FSQueue implements Queue, Schedulable {
   }
 
   public boolean hasAccess(QueueACL acl, UserGroupInformation user) {
-    return scheduler.getAllocationConfiguration().hasAccess(name, acl, user);
+    // support YarnAuthorizationProvider in FairScheduler
+    //if install service ranger, authorized by ranger else by fairscheduler itself
+    if(authorizer instanceof ConfiguredYarnAuthorizer){
+      return scheduler.getAllocationConfiguration().hasAccess(name, acl, user);
+    }
+    return authorizer.checkPermission(SchedulerUtils.toAccessType(acl), queueEntity, user);
   }
 
   public long getFairSharePreemptionTimeout() {

@@ -231,7 +231,7 @@ public class SecurityUtil {
       final String keytabFileKey, final String userNameKey, String hostname)
       throws IOException {
     
-    if(! UserGroupInformation.isSecurityEnabled()) 
+    if(! UserGroupInformation.isSecurityEnabled() || UserGroupInformation.isAuthenticationEnabled( AuthenticationMethod.SDP))
       return;
     
     String keytabFilename = conf.get(keytabFileKey);

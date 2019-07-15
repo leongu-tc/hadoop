@@ -94,7 +94,7 @@ public abstract class ProtoUtil {
        * In the connection context we send only additional user info that
        * is not derived from the authentication done during connection setup.
        */
-      if (authMethod == AuthMethod.KERBEROS) {
+      if (authMethod == AuthMethod.KERBEROS || authMethod == AuthMethod.SDP_PLAIN) {
         // Real user was established as part of the connection.
         // Send effective user only.
         ugiProto.setEffectiveUser(ugi.getUserName());

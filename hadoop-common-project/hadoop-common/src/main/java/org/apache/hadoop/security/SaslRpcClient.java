@@ -18,17 +18,9 @@
 
 package org.apache.hadoop.security;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FilterInputStream;
-import java.io.FilterOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
+import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +39,10 @@ import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslClient;
 
+import com.cgws.sdp.auth.common.SdpAuthInfo;
+import com.cgws.sdp.auth.common.SdpAuthUtil;
+import org.apache.commons.codec.digest.HmacUtils;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
@@ -238,11 +234,50 @@ public class SaslRpcClient {
         }
         break;
       }
+      case SDP_PLAIN:{
+        saslCallback = new CallbackHandler() {
+          public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+            for( Callback callback : callbacks ){
+              if( callback instanceof NameCallback){
+                String publicKey = conf.get("hadoop_security_authentication_sdp_publickey");
+                String privateKey = conf.get("hadoop_security_authentication_sdp_privatekey");
+                String userName = conf.get("hadoop_security_authentication_sdp_username");
+                if( publicKey == null ){
+                  publicKey = conf.get("hadoop.security.authentication.sdp.publickey");
+                }
+                if( privateKey == null ){
+                  privateKey = conf.get("hadoop.security.authentication.sdp.privatekey");
+                }
+                if(userName == null){
+                  userName = conf.get("hadoop.security.authentication.sdp.username");
+                }
+                if( publicKey == null || privateKey == null ){
+                  LOG.error("Authenticate with sdp sasl mechanism. No publicKey or privateKey set.");
+                  throw new IOException("Authenticate with sdp sasl mechanism. No publicKey or privateKey set.");
+                }
+                LOG.debug("SaslRpcClient get publiceKey["+publicKey+"]");
+                SdpAuthInfo sdpAuthInfo = SdpAuthUtil.generateSdpAuthInfo(publicKey, privateKey);
+                ((NameCallback)callback).setName( publicKey+" " + sdpAuthInfo.getTimestamp() + " " + sdpAuthInfo.getRandomValue() + " " + sdpAuthInfo.getSignature());
+                LOG.debug("saslRpcClient get keypair related params:"+((NameCallback) callback).getName());
+                LOG.debug("SaslRpcClient get user name from ugi:"+ugi.getUserName());
+              }else if( callback instanceof PasswordCallback){
+                ((PasswordCallback)callback).setPassword("PLACEHOLDER".toCharArray());
+              }
+            }
+          }
+        };
+        break;
+      }
       default:
         throw new IOException("Unknown authentication method " + method);
     }
-    
+
+
+
     String mechanism = method.getMechanismName();
+    if( method == AuthMethod.SDP_PLAIN){
+      mechanism = "PLAIN";
+    }
     if (LOG.isDebugEnabled()) {
       LOG.debug("Creating SASL " + mechanism + "(" + method + ") "
           + " client to authenticate to service at " + saslServerName);
@@ -251,7 +286,7 @@ public class SaslRpcClient {
         new String[] { mechanism }, saslUser, saslProtocol, saslServerName,
         saslProperties, saslCallback);
   }
-  
+
   /**
    * Try to locate the required token for the server.
    * 
@@ -433,7 +468,9 @@ public class SaslRpcClient {
           // switch to simple
           if (saslClient == null) {
             authMethod = AuthMethod.SIMPLE;
-          } else {
+          } else if( authMethod == AuthMethod.SDP_PLAIN){
+            LOG.debug("sasl sdp_plain authentication completed in client side!");
+          }else{
             saslEvaluateToken(saslMessage, true);
           }
           done = true;

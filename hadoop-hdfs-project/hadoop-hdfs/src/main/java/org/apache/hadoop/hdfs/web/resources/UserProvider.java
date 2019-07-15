@@ -52,7 +52,7 @@ public class UserProvider
         .getAttribute(JspHelper.CURRENT_CONF);
     try {
       return JspHelper.getUGI(servletcontext, request, conf,
-          AuthenticationMethod.KERBEROS, false);
+          UserGroupInformation.isAuthenticationEnabled(AuthenticationMethod.SDP)?AuthenticationMethod.SDP :AuthenticationMethod.KERBEROS, false);
     } catch (IOException e) {
       throw new SecurityException(
           SecurityUtil.FAILED_TO_GET_UGI_MSG_HEADER + " " + e, e);

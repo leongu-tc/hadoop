@@ -267,7 +267,7 @@ public class NamenodeWebHdfsMethods {
     }
 
     final String delegationQuery;
-    if (!UserGroupInformation.isSecurityEnabled()) {
+    if (!UserGroupInformation.isSecurityEnabled() || UserGroupInformation.isAuthenticationEnabled( UserGroupInformation.AuthenticationMethod.SDP)) {
       //security disabled
       delegationQuery = Param.toSortedString("&", doAsUser, username);
     } else if (delegation.getValue() != null) {
@@ -481,6 +481,14 @@ public class NamenodeWebHdfsMethods {
           exclDatanodes.getValue(), permission, overwrite, bufferSize,
           replication, blockSize);
       return Response.temporaryRedirect(uri).type(MediaType.APPLICATION_OCTET_STREAM).build();
+    } 
+    case COPY:
+    {
+    	final URI uri = redirectURI(namenode, ugi, delegation, username,
+    			doAsUser, fullpath, op.getValue(), -1L, blockSize.getValue(conf),
+    			exclDatanodes.getValue(), permission, overwrite, bufferSize,
+    			replication, blockSize);
+    	return Response.temporaryRedirect(uri).type(MediaType.APPLICATION_OCTET_STREAM).build();
     } 
     case MKDIRS:
     {

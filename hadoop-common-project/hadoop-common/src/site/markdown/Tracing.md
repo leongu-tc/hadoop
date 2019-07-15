@@ -66,7 +66,7 @@ in `core-site.xml` property: `hadoop.htrace.spanreceiver.classes`.
       </property>
       <property>
         <name>hadoop.htrace.local-file-span-receiver.path</name>
-        <value>/var/log/hadoop/htrace.out</value>
+        <value>/var/log/sdp/hadoop/htrace.out</value>
       </property>
 
 You can omit package name prefix if you use span receiver bundled with HTrace.

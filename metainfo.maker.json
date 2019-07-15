@@ -1,0 +1,16 @@
+script=build.sh
+target=path:RPMS/x86_64,type:rpm,build:rpmbuild,name:hadoop_2_2_0_0_2041,version:2.7.2,arch:x86_64,yum_path:hadoop/hadoop
+target=path:RPMS/x86_64,type:rpm,build:rpmbuild,name:hadoop_2_2_0_0_2041-client,version:2.7.2,arch:x86_64,yum_path:hadoop/hadoop
+target=path:RPMS/x86_64,type:rpm,build:rpmbuild,name:hadoop_2_2_0_0_2041-hdfs,version:2.7.2,arch:x86_64,yum_path:hadoop/hadoop
+target=path:RPMS/x86_64,type:rpm,build:rpmbuild,name:hadoop_2_2_0_0_2041-hdfs-datanode,version:2.7.2,arch:x86_64,yum_path:hadoop/hadoop
+target=path:RPMS/x86_64,type:rpm,build:rpmbuild,name:hadoop_2_2_0_0_2041-hdfs-journalnode,version:2.7.2,arch:x86_64,yum_path:hadoop/hadoop
+target=path:RPMS/x86_64,type:rpm,build:rpmbuild,name:hadoop_2_2_0_0_2041-hdfs-namenode,version:2.7.2,arch:x86_64,yum_path:hadoop/hadoop
+target=path:RPMS/x86_64,type:rpm,build:rpmbuild,name:hadoop_2_2_0_0_2041-hdfs-secondarynamenode,version:2.7.2,arch:x86_64,yum_path:hadoop/hadoop
+target=path:RPMS/x86_64,type:rpm,build:rpmbuild,name:hadoop_2_2_0_0_2041-hdfs-zkfc,version:2.7.2,arch:x86_64,yum_path:hadoop/hadoop
+target=path:RPMS/x86_64,type:rpm,build:rpmbuild,name:hadoop_2_2_0_0_2041-httpfs,version:2.7.2,arch:x86_64,yum_path:hadoop/hadoop
+target=path:RPMS/x86_64,type:rpm,build:rpmbuild,name:hadoop_2_2_0_0_2041-mapreduce,version:2.7.2,arch:x86_64,yum_path:hadoop/hadoop
+target=path:RPMS/x86_64,type:rpm,build:rpmbuild,name:hadoop_2_2_0_0_2041-mapreduce-historyserver,version:2.7.2,arch:x86_64,yum_path:hadoop/hadoop
+target=path:RPMS/x86_64,type:rpm,build:rpmbuild,name:hadoop_2_2_0_0_2041-yarn,version:2.7.2,arch:x86_64,yum_path:hadoop/hadoop
+target=path:RPMS/x86_64,type:rpm,build:rpmbuild,name:hadoop_2_2_0_0_2041-yarn-nodemanager,version:2.7.2,arch:x86_64,yum_path:hadoop/hadoop
+target=path:RPMS/x86_64,type:rpm,build:rpmbuild,name:hadoop_2_2_0_0_2041-yarn-proxyserver,version:2.7.2,arch:x86_64,yum_path:hadoop/hadoop
+target=path:RPMS/x86_64,type:rpm,build:rpmbuild,name:hadoop_2_2_0_0_2041-yarn-resourcemanager,version:2.7.2,arch:x86_64,yum_path:hadoop/hadoop

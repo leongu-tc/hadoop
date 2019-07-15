@@ -39,6 +39,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
 import org.apache.hadoop.security.authentication.server.PseudoAuthenticationHandler;
+import org.apache.hadoop.security.authentication.server.SdpAuthenticationHandler;
 import org.apache.hadoop.util.StringUtils;
 
 /**
@@ -63,8 +64,8 @@ public class AuthFilter extends AuthenticationFilter {
       throws ServletException {
     final Properties p = super.getConfiguration(CONF_PREFIX, config);
     // set authentication type
-    p.setProperty(AUTH_TYPE, UserGroupInformation.isSecurityEnabled()?
-        KerberosAuthenticationHandler.TYPE: PseudoAuthenticationHandler.TYPE);
+    p.setProperty(AUTH_TYPE, UserGroupInformation.isSecurityEnabled() && !UserGroupInformation.isAuthenticationEnabled(UserGroupInformation.AuthenticationMethod.SDP)?
+        KerberosAuthenticationHandler.TYPE: UserGroupInformation.isAuthenticationEnabled(UserGroupInformation.AuthenticationMethod.SDP)? SdpAuthenticationHandler.TYPE:PseudoAuthenticationHandler.TYPE);
     // if not set, enable anonymous for pseudo authentication
     if (p.getProperty(PseudoAuthenticationHandler.ANONYMOUS_ALLOWED) == null) {
       p.setProperty(PseudoAuthenticationHandler.ANONYMOUS_ALLOWED, "true");

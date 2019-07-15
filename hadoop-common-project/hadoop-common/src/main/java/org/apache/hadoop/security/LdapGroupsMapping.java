@@ -83,6 +83,12 @@ public class LdapGroupsMapping
   public static final String LDAP_URL_KEY = LDAP_CONFIG_PREFIX + ".url";
   public static final String LDAP_URL_DEFAULT = "";
 
+  private static final String CONNECT_TIME_OUT = "com.sun.jndi.ldap.connect.timeout";
+
+  private static final String READ_TIME_OUT = "com.sun.jndi.ldap.read.timeout";
+
+  private static final String TIME_OUT = "10000";
+
   /*
    * Should SSL be used to connect to the server
    */
@@ -202,10 +208,9 @@ public class LdapGroupsMapping
     try {
       return doGetGroups(user);
     } catch (CommunicationException e) {
-      LOG.warn("Connection is closed, will try to reconnect");
+      LOG.warn("Connection is closed, will try to reconnect", e);
     } catch (NamingException e) {
-      LOG.warn("Exception trying to get groups for user " + user + ": "
-          + e.getMessage());
+      LOG.warn("Exception trying to get groups for user " + user, e);
       return emptyResults;
     }
 
@@ -254,6 +259,10 @@ public class LdapGroupsMapping
       }
     }
 
+    if (groups.isEmpty()) {
+        LOG.warn("no group info in ladp for user:" + user);
+    }
+    
     return groups;
   }
 
@@ -273,6 +282,8 @@ public class LdapGroupsMapping
         System.setProperty("javax.net.ssl.keyStorePassword", keystorePass);
       }
 
+      env.put(CONNECT_TIME_OUT, TIME_OUT);
+      env.put(READ_TIME_OUT, TIME_OUT);
       env.put(Context.SECURITY_PRINCIPAL, bindUser);
       env.put(Context.SECURITY_CREDENTIALS, bindPassword);
 

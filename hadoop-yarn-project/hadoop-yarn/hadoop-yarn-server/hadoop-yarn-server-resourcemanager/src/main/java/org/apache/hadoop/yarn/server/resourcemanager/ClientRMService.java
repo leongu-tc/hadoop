@@ -538,6 +538,9 @@ public class ClientRMService extends AbstractService implements
     // checked here, those that are dependent on RM configuration are validated
     // in RMAppManager.
 
+    // store app client ip
+    applicationId.setClientIp( Server.getRemoteAddress() );
+
     String user = null;
     try {
       // Safety

@@ -220,6 +220,10 @@ public class Groups {
       List<String> groups = fetchGroupList(user);
 
       if (groups.isEmpty()) {
+        Map<String, List<String>> groupMap = cache.asMap();
+        if (groupMap.containsKey(user)){
+            return cache.get(user);
+        }
         if (isNegativeCacheEnabled()) {
           negativeCache.add(user);
         }

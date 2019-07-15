@@ -24,6 +24,7 @@ public class PutOpParam extends HttpOpParam<PutOpParam.Op> {
   /** Put operations. */
   public static enum Op implements HttpOpParam.Op {
     CREATE(true, HttpURLConnection.HTTP_CREATED),
+    COPY(true, HttpURLConnection.HTTP_OK),
 
     MKDIRS(false, HttpURLConnection.HTTP_OK),
     CREATESYMLINK(false, HttpURLConnection.HTTP_OK),

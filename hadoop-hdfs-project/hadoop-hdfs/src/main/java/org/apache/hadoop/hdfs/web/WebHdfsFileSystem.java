@@ -198,7 +198,7 @@ public class WebHdfsFileSystem extends FileSystem
     }
 
     this.workingDir = getHomeDirectory();
-    this.canRefreshDelegationToken = UserGroupInformation.isSecurityEnabled();
+    this.canRefreshDelegationToken = UserGroupInformation.isSecurityEnabled() && !UserGroupInformation.isAuthenticationEnabled(UserGroupInformation.AuthenticationMethod.SDP);
     this.disallowFallbackToInsecureCluster = !conf.getBoolean(
         CommonConfigurationKeys.IPC_CLIENT_FALLBACK_TO_SIMPLE_AUTH_ALLOWED_KEY,
         CommonConfigurationKeys.IPC_CLIENT_FALLBACK_TO_SIMPLE_AUTH_ALLOWED_DEFAULT);

@@ -43,6 +43,7 @@ import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 import javax.security.sasl.SaslServerFactory;
 
+import com.cgws.sdp.auth.plugin.SdpAuthenticator;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.logging.Log;
@@ -117,6 +118,19 @@ public class SaslRpcServer {
         serverId = (parts.length < 2) ? "" : parts[1];
         break;
       }
+      case SDP_PLAIN:{
+
+        ///need add code here
+        //just init sasl sdp authenticator ,mainly pass portal address for use
+        Configuration conf = new Configuration();
+        //for hadoop component all new conf will load core-site
+        SdpAuthenticator.getInstance(conf.get("sdp.portal.rpc.ip","127.0.0.1"),
+                conf.getInt("sdp.portal.rpc.port",12345),
+                conf.get("hadoop.auth.sdp.module.name","hadoop")
+        );
+
+        break;
+      }
       default:
         // we should never be able to get here
         throw new AccessControlException(
@@ -146,6 +160,10 @@ public class SaslRpcServer {
         }
         callback = new SaslGssCallbackHandler();
         break;
+      }
+      case SDP_PLAIN:{
+          callback = null;
+          break;
       }
       default:
         // we should never be able to get here
@@ -179,6 +197,8 @@ public class SaslRpcServer {
 
   public static void init(Configuration conf) {
     Security.addProvider(new SaslPlainServer.SecurityProvider());
+    //added for sdp auth
+    Security.addProvider( new SaslSdpServer.SdpSaslServerProvider());
     // passing null so factory is populated with all possibilities.  the
     // properties passed when instantiating a server are what really matter
     saslFactory = new FastSaslServerFactory(null);
@@ -224,7 +244,8 @@ public class SaslRpcServer {
     @Deprecated
     DIGEST((byte) 82, "DIGEST-MD5"),
     TOKEN((byte) 82, "DIGEST-MD5"),
-    PLAIN((byte) 83, "PLAIN");
+    PLAIN((byte) 83, "PLAIN"),
+    SDP_PLAIN((byte) 84, "SDP_PLAIN");
 
     /** The code for this method. */
     public final byte code;

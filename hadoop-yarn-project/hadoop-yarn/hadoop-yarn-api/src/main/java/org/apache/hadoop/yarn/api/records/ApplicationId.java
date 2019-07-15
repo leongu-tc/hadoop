@@ -43,6 +43,17 @@ public abstract class ApplicationId implements Comparable<ApplicationId> {
   @Unstable
   public static final String appIdStrPrefix = "application_";
 
+  // ranger to authorize by client ip
+  private String clientIp = null;
+
+  public String getClientIp() {
+    return clientIp;
+  }
+
+  public void setClientIp(String clientIp) {
+    this.clientIp = clientIp;
+  }
+
   @Private
   @Unstable
   public static ApplicationId newInstance(long clusterTimestamp, int id) {

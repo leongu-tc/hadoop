@@ -32,6 +32,7 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.server.common.JspHelper;
 import org.apache.hadoop.hdfs.server.namenode.startupprogress.StartupProgress;
 import org.apache.hadoop.hdfs.server.namenode.web.resources.NamenodeWebHdfsMethods;
+import org.apache.hadoop.hdfs.web.AuthFilter;
 import org.apache.hadoop.hdfs.web.WebHdfsFileSystem;
 import org.apache.hadoop.hdfs.web.resources.Param;
 import org.apache.hadoop.hdfs.web.resources.UserParam;
@@ -40,6 +41,9 @@ import org.apache.hadoop.http.HttpServer2;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.mortbay.jetty.Handler;
+import org.mortbay.jetty.servlet.FilterMapping;
+import org.mortbay.jetty.servlet.ServletHandler;
 
 /**
  * Encapsulates the HTTP server started by the NameNode. 
@@ -93,6 +97,17 @@ public class NameNodeHttpServer {
     }
   }
 
+  private void initFsck(Configuration conf){
+    if( UserGroupInformation.isAuthenticationEnabled( UserGroupInformation.AuthenticationMethod.SDP) ) {
+      ServletHandler handler = httpServer.getWebAppContext().getServletHandler();
+      FilterMapping fmap = new FilterMapping();
+      fmap.setPathSpec("/fsck");
+      fmap.setFilterName(AuthFilter.class.getName());
+      fmap.setDispatches(Handler.ALL);
+      handler.addFilterMapping(fmap);
+    }
+  }
+
   /**
    * @see DFSUtil#getHttpPolicy(org.apache.hadoop.conf.Configuration)
    * for information related to the different configuration options and
@@ -138,7 +153,10 @@ public class NameNodeHttpServer {
 
     httpServer.setAttribute(NAMENODE_ATTRIBUTE_KEY, nn);
     httpServer.setAttribute(JspHelper.CURRENT_CONF, conf);
+    //set fsck command for surpport sdp auth
     setupServlets(httpServer, conf);
+    //
+    initFsck(conf);
     httpServer.start();
 
     int connIdx = 0;
@@ -260,6 +278,8 @@ public class NameNodeHttpServer {
         FileChecksumServlets.RedirectServlet.class, false);
     httpServer.addInternalServlet("contentSummary", "/contentSummary/*",
         ContentSummaryServlet.class, false);
+    httpServer.addInternalServlet("NNStat", "/nnstat",
+            NNStatServlet.class, false);
   }
 
   static FSImage getFsImageFromContext(ServletContext context) {

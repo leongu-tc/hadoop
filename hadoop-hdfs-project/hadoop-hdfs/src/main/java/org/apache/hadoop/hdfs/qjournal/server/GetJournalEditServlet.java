@@ -139,7 +139,7 @@ public class GetJournalEditServlet extends HttpServlet {
   private boolean checkRequestorOrSendError(Configuration conf,
       HttpServletRequest request, HttpServletResponse response)
           throws IOException {
-    if (UserGroupInformation.isSecurityEnabled()
+    if (UserGroupInformation.isSecurityEnabled() && !UserGroupInformation.isAuthenticationEnabled( UserGroupInformation.AuthenticationMethod.SDP)
         && !isValidRequestor(request, conf)) {
       response.sendError(HttpServletResponse.SC_FORBIDDEN,
           "Only Namenode and another JournalNode may access this servlet");

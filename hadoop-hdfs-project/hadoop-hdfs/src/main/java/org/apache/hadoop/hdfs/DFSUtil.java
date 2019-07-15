@@ -1682,7 +1682,7 @@ public class DFSUtil {
 
     HttpServer2.Builder builder = new HttpServer2.Builder().setName(name)
         .setConf(conf).setACL(new AccessControlList(conf.get(DFS_ADMIN, " ")))
-        .setSecurityEnabled(UserGroupInformation.isSecurityEnabled())
+        .setSecurityEnabled(UserGroupInformation.isSecurityEnabled() && !UserGroupInformation.isAuthenticationEnabled( UserGroupInformation.AuthenticationMethod.SDP))
         .setUsernameConfKey(spnegoUserNameKey)
         .setKeytabConfKey(getSpnegoKeytabKey(conf, spnegoKeytabFileKey));
 

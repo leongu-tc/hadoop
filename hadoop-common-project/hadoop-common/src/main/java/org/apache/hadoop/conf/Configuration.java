@@ -692,6 +692,30 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
       REGISTRY.put(this, null);
     }
   }
+  public static  String[] sdpAuthKeys = new String[]{
+          "hadoop_security_authentication_sdp_username",
+          "hadoop_security_authentication_sdp_publickey",
+          "hadoop_security_authentication_sdp_privatekey",
+
+          "hadoop.security.authentication.sdp.username",
+          "hadoop.security.authentication.sdp.publickey",
+          "hadoop.security.authentication.sdp.privatekey"
+  };
+
+  public void loadSdpAuthParams(){
+    LOG.debug("start load auth param from env or sys properties...");
+    Map<String, String> envs = System.getenv();
+    Properties sysProps = System.getProperties();
+    for( String key : sdpAuthKeys){
+      if( envs.get(key) != null ){
+        set(key,envs.get(key));
+        LOG.debug("loaded auth param(env) " + key + ":" + envs.get(key));
+      }else if( sysProps.get(key) != null ){
+        set(key,(String)sysProps.get(key));
+        LOG.debug("loaded auth param(sys) " + key + ":" + sysProps.get(key));
+      }
+    }
+  }
   
   /** 
    * A new configuration with the same settings cloned from another.
@@ -2414,6 +2438,8 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
           }
         }
       }
+      //load sdp auth params
+      loadSdpAuthParams();
     }
     return properties;
   }
